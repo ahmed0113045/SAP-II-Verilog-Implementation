@@ -7,51 +7,51 @@
 *
 * Input :
 * data : data from MDR
-* WBUS    = the Data from the WBUS.
-* nCE     = Enabled the output (0 = Read from MAR)
+* address = address of memory location to read or write
+* nCE     = Enabled the output & input to MDR (0 write, 1 read, always Read address from MAR)
+* CLK	  = clock signal
 *
 * Output : Data to MDR
 * data = Address to the RAM
 */
 module memory (
-				inout  [7:0]  data,
-				input  [15:0] WBUS,
-				input         nCE );		
+				inout  [07:0] data,
+				input  [15:0] address,
+				input         nCE, 
+				input 		  CLK );		
 	
 	parameter Zero_State     = 8'b0000_0000;
 	parameter High_Impedance = 8'bzzzz_zzzz;
-
-    reg [7:0] memory [0:65536‬]; // 8-bits x 64K Memory Location
-
+	parameter memory_size = 65536;	//65536
+    reg [7:0] memory [0:memory_size]; // 8-bits x 64K Memory Location
+	assign data = nCE? memory[address] : High_Impedance;
+integer i;
     initial begin
-		for (i = 0; i<655367; i=i+1)
-			memory[i] <= Zero_State;
+		for (i = 0; i<memory_size; i=i+1)
+			memory[i] <= i;
     end
-    
-	// Write your Code here :
 	
-	
-	
-	
-	
-	
-	
-	
+	always @(posedge CLK) begin
+		if(!nCE)		memory[address] <= data;
+	end
 endmodule
 /***************************************************************************/
 module t_memory;
 
-	wire [15:0] data;
-	reg  [15:0] WBUS;
+	wire [07:0] data;
+	reg  [15:0] address;
 	reg         nCE;
-
-	memory Memory (data,WBUS,nCE );	
-
-	initial begin 
-		
-		// Write your Test Cases here :
-		
-		
+	parameter High_Impedance = 8'bzzzz_zzzz;
+	reg [07:0]in; 
+	assign data = (!nCE)? in: High_Impedance;
+	memory Memory (data,address,nCE);	
+	
+	initial begin
+			nCE = 1'b1;	address = 16'h0000;	
+	#100	nCE = 1'b1;	address = 16'h0001;	
+	#100	nCE = 1'b1;	address = 16'h0002;
+	#100	nCE = 1'b0;	address = 16'h0003;	in = 8'h20;
+	#100	nCE = 1'b0;	address = 16'h0004;	in = 8'h30;
 	end
 
 endmodule
